@@ -59,23 +59,23 @@ sub test_left_reads{
 
 	my $first_left = new_ok($Class, ['@bla.1 SUBSTR:0,2'."\nAC\n+\nII"]);
 	isa_ok($reads[0][0], $Class, "first left read");
-	cmp_deeply($first_left, $reads[0][0], 'First left read deeply');
+	cmp_deeply($reads[0][0], $first_left, 'First left read deeply');
 	
 	my $second_left = new_ok($Class, ['@bla.2 SUBSTR:1,2'."\nCC\n+\nIH"]);
 	isa_ok($reads[0][1], $Class, "Second left read");
-	cmp_deeply($second_left, $reads[0][1], 'Second left read deeply');
+	cmp_deeply($reads[0][1], $second_left, 'Second left read deeply');
 	
 	my $read = $Class->new('@bla.3 SUBSTR:2,2'."\nCG\n+\nHH");
 	isa_ok($reads[0][2], $Class, "Third left read");
-	cmp_deeply($read, $reads[0][2], 'Third left read deeply');
+	cmp_deeply($reads[0][2], $read, 'Third left read deeply');
 	
 	$read = $Class->new('@bla.4 SUBSTR:3,2'."\nGT\n+\nHG");
 	isa_ok($reads[0][3], $Class, "Fourth left read");
-	cmp_deeply($read, $reads[0][3], 'Fourth left read deeply');
+	cmp_deeply($reads[0][3], $read, 'Fourth left read deeply');
 	
 	$read = $Class->new('@bla.5 SUBSTR:4,2'."\nTA\n+\nGG");
 	isa_ok($reads[0][4], $Class, "Fifth left read");
-	cmp_deeply($read, $reads[0][4], 'Fifth left read deeply');
+	cmp_deeply($reads[0][4], $read, 'Fifth left read deeply');
 
 	is($reads[1], undef, 'no pairs in unpaired mode');
 };
@@ -94,11 +94,15 @@ my @reads_paired = $fq_seq->pb2il('paired'=>1);
 
 	my $first_left_pair = new_ok($Class, ['@bla.1 SUBSTR:0,2'."\nAC\n+\nII"], 'First left pair');
 	isa_ok($reads_paired[0][0], $Class, "first left pair");
-	cmp_deeply($first_left_pair, $reads_paired[0][0], 'First left pair deeply');
+	cmp_deeply($reads_paired[0][0], $first_left_pair, 'First left pair deeply');
 
 	my $first_right_pair = new_ok($Class, ['@bla.1 SUBSTR:3,2'."\nGG\n+\nHI"]);
 	isa_ok($reads_paired[1][0], $Class, "First right pair");
-	cmp_deeply($first_right_pair, $reads_paired[1][0], 'First right pair deeply');
+	cmp_deeply($reads_paired[1][0], $first_right_pair, 'First right pair deeply');
+	
+	my $right_pair = new_ok($Class, ['@bla.2 SUBSTR:2,2'."\nCG\n+\nHH"]);
+	isa_ok($reads_paired[1][1], $Class, "Second right pair");
+	cmp_deeply($reads_paired[1][1], $right_pair, 'Second right pair deeply');
 };
 
 
