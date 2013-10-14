@@ -11,7 +11,6 @@ use Data::Dumper;
 
 use FindBin qw($RealBin);
 use lib "$RealBin/../lib/";
-use lib "/home/s216121/lib/perl5/custom/";
 
 
 #--------------------------------------------------------------------------#

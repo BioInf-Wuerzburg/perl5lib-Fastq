@@ -4,7 +4,7 @@ use lib '../';
 use Data::Dumper;
 
 sub Fastq::Seq::pb2il{
-	my $self = shift;
+	my $self = shift->new;
 	my %options = (
 		'length'=>2,
 		'insert'=>3,
@@ -24,7 +24,7 @@ sub Fastq::Seq::pb2il{
 	if($options{'paired'}){
 		@ranges = ();
 		$self->reverse_complement();
-		for(my $start=0; $start<(length($seq)-$options{'insert'}); $start+=$options{'step'}){
+		for(my $start=0; $start<=(length($seq)-$options{'insert'}); $start+=$options{'step'}){
 			push(@ranges, [length($seq)-$start-$options{'insert'}, $options{'length'}]);
 		}
 		$rightpairs = [$self->substr_seq(@ranges)];

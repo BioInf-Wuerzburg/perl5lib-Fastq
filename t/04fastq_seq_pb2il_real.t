@@ -34,12 +34,12 @@ my $Class = 'Fastq::Seq';
 
 =cut
 
-my $parser = new_ok('Fastq::Parser', ['file' => $RealBin.'/03pacbio.fq']);
+my $parser = new_ok('Fastq::Parser', ['file' => $RealBin.'/04pacbio.fq']);
 can_ok($parser, 'next_seq');
 my $pacbio_seq = $parser->next_seq();
 isa_ok($pacbio_seq, $Class);
 can_ok($pacbio_seq, 'pb2il');
-my @pb2il_reads = $pacbio_seq->pb2il('paired' => 1, 'length' => 113, 'insert' => 219, 'step' => 97);
+my @pb2il_reads = $pacbio_seq->pb2il('paired' => 1, 'length' => 100, 'insert' => 200, 'step' => 50);
 
 #--------------------------------------------------------------------------#
 
@@ -49,10 +49,10 @@ my @pb2il_reads = $pacbio_seq->pb2il('paired' => 1, 'length' => 113, 'insert' =>
 
 =cut
 
-my $parser_il1 = new_ok('Fastq::Parser', ['file' => $RealBin.'/03illumina_1.fq']);
-my $parser_il2 = new_ok('Fastq::Parser', ['file' => $RealBin.'/03illumina_2.fq']);
+my $parser_il1 = new_ok('Fastq::Parser', ['file' => $RealBin.'/04illumina_1.fq']);
+my $parser_il2 = new_ok('Fastq::Parser', ['file' => $RealBin.'/04illumina_2.fq']);
 
-subtest 'pb2il - paired length=113 inser=219 step=97' => sub{
+subtest 'pb2il - paired length=100 inser=200 step=50' => sub{
 	my $i=0;
 	while (my $expected_right=$parser_il2->next_seq()){
 		my $expected_left = $parser_il1->next_seq();
@@ -64,9 +64,9 @@ subtest 'pb2il - paired length=113 inser=219 step=97' => sub{
 	}
 };
 
-my @pb2il_unpaired = $pacbio_seq->pb2il('paired' => 0, 'length' => 113, 'insert' => 219, 'step' => 97);
-my $parser_il = new_ok('Fastq::Parser', ['file' => $RealBin.'/03illumina_1.fq']);
-subtest 'pb2il - unpaired length=113 inser=219 step=97' => sub{
+my @pb2il_unpaired = $pacbio_seq->pb2il('paired' => 0, 'length' => 100, 'insert' => 200, 'step' => 50);
+my $parser_il = new_ok('Fastq::Parser', ['file' => $RealBin.'/04illumina_1.fq']);
+subtest 'pb2il - unpaired length=100 inser=200 step=50' => sub{
 	my $i=0;
 	while (my $expected=$parser_il->next_seq()){
 		my $got = shift(@{$pb2il_unpaired[0]});
