@@ -53,7 +53,7 @@ can_ok($fq_seq, ('pb2il'));
 subtest 'pb2il - unpaired' => \&test_left_reads;
 
 sub test_left_reads{
-	my @reads = $fq_seq->pb2il();
+	my @reads = $fq_seq->pb2il('length'=>2,'step'=>1);
 	# print Dumper(\@reads);
 
 	my $first_left = new_ok($Class, ['@bla.1 SUBSTR:0,2'."\nAC\n+\nII"]);
@@ -88,7 +88,7 @@ sub test_left_reads{
 =cut
 
 subtest 'pb2il - paired' => sub{
-my @reads_paired = $fq_seq->pb2il('paired'=>1);
+my @reads_paired = $fq_seq->pb2il('length'=>2,'step'=>1,'insert'=>3,'paired'=>1);
 # print Dumper(\@reads);
 
 	my $first_left_pair = new_ok($Class, ['@bla.1 SUBSTR:0,2'."\nAC\n+\nII"], 'First left pair');
