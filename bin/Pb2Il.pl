@@ -127,7 +127,7 @@ open( OUT1, ">", $opt_out . "_1.fq" )
 open( OUT2, ">", $opt_out . "_2.fq" )
   or die "Can't open file $opt_out" . "_2.fq $!"
   if ($opt_paired);
-my $parser = Fastq::Parser->new($opt_in);
+my $parser = Fastq::Parser->new('file' => $opt_in);
 while ( my $seq = $parser->next_seq() ) {
 	my @fragments = $seq->pb2il(
 		'paired' => $opt_paired,
