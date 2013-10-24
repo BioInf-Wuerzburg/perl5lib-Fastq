@@ -109,9 +109,9 @@ sub Fastq::Seq::pb2il {
 		}
 	}
 	my $leftpairs  = undef;
-	$leftpairs = [ $self->substr_seq(@ranges) ] if(length(@ranges)>0);
+	$leftpairs = [ $self->substr_seq(@ranges) ] if(@ranges);
 	my $rightpairs = undef;
-	if($options{'paired'} and length(@ranges_rc)>0){
+	if($options{'paired'} and @ranges_rc){
 		$rightpairs = [ $comp->substr_seq(@ranges_rc) ];
 	}
 	return $options{'paired'} ? ( $leftpairs, $rightpairs ) : ( $leftpairs );
