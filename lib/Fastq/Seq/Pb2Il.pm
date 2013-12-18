@@ -66,6 +66,13 @@ it is not searching for possible pairs without lowercase letters,
 it just discards the reads if they contain some. 
 (Default: 0)
 
+=item 'opp-out' => BOOLEAN
+
+Wheter the readpairs should be oriented outwards (Default is inwards).
+Outwards means both reads of a pair get reverse complemented.
+This option is ignored if option 'paired' is not set.
+(Default: 0)
+
 =cut
 
 sub Fastq::Seq::pb2il {
@@ -76,6 +83,7 @@ sub Fastq::Seq::pb2il {
 		'paired' => 0,
 		'step'   => 150,
 		'masked' => 0,
+		'opp-out' => 0,
 		@_
 	);
 	$options{'insert'} = $options{'length'} unless ( $options{'paired'} );
@@ -113,6 +121,10 @@ sub Fastq::Seq::pb2il {
 	my $rightpairs = undef;
 	if($options{'paired'} and @ranges_rc){
 		$rightpairs = [ $comp->substr_seq(@ranges_rc) ];
+	}
+	if($options{'paired'} && $options{'opp-out'}){
+		$_->reverse_complement() foreach(@{$rightpairs});
+		$_->reverse_complement() foreach(@{$leftpairs});
 	}
 	return $options{'paired'} ? ( $leftpairs, $rightpairs ) : ( $leftpairs );
 }

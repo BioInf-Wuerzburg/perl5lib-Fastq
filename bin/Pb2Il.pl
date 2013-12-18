@@ -86,6 +86,15 @@ Specify if lowercase letters should be considered as masked and therefore exclud
 
 $options{'masked!'} = \( my $opt_masked = 0 );
 
+=item --[no]opp-out
+
+Specify if read pairs should be oriented oudwards (usual for jumping libraries, default is inward)
+(default: noopp-out)
+
+=cut
+
+$options{'opp-out!'} = \( my $opt_oppout = 0 );
+
 =item [--help] 
 
 show help
@@ -134,7 +143,8 @@ while ( my $seq = $parser->next_seq() ) {
 		'masked' => $opt_masked,
 		'step'   => $opt_step,
 		'insert' => $opt_insert,
-		'length' => $opt_length
+		'length' => $opt_length,
+		'opp-out' => $opt_oppout
 	);
 	foreach my $subseq ( @{ $fragments[0] } ) {
 		print OUT1 $subseq;
