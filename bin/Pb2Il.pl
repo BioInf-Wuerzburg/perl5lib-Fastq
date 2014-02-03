@@ -17,6 +17,16 @@ Pb2Il.pl
 
 This script creates (paired) read files from a file with larger sequences (eg Illumina reads from PacBio reads).
 
+=head1 CHANGELOG
+
+=over
+
+=item [Feature] --in reads STDIN by default.
+
+=item [Feature] --interleaved creates interleaved output (thackl)
+
+=back
+
 =head1 USAGE
 
   $ perl Pb2Il.pl --in=<file> --out <filebase> [options]
@@ -25,9 +35,9 @@ This script creates (paired) read files from a file with larger sequences (eg Il
 
 =over 25
 
-=item --in=<file>
+=item [--in=<file>]
 
-path to the fastq file containing the large reads.
+path to the fastq file containing the large reads. Default STDIN.
 
 =cut
 
@@ -95,6 +105,15 @@ Specify if read pairs should be oriented oudwards (usual for jumping libraries, 
 
 $options{'opp-out!'} = \( my $opt_oppout = 0 );
 
+=item --[no]interleaved
+
+Output in interleaved format
+
+=cut
+
+$options{'interleaved!'} = \( my $opt_interleaved = 0 );
+
+
 =item [--help] 
 
 show help
@@ -128,14 +147,24 @@ pod2usage(
 	-sections => "NAME|DESCRIPTION|USAGE|OPTIONS|LIMITATIONS|AUTHORS"
 ) if ($opt_man);
 
-pod2usage( -msg => "Missing option --in or --out", -verbose => 0 )
-  unless ( $opt_in && $opt_out );
+pod2usage( -msg => "Missing option --out", -verbose => 0 )
+  unless ( $opt_out );
 
-open( OUT1, ">", $opt_out . "_1.fq" )
+print STDERR "Reading STDIN" unless $opt_in;
+
+my ($OUT1, $OUT2);
+
+open( $OUT1, ">", $opt_out . "_1.fq" )
   or die "Can't open file $opt_out" . "_1.fq $!";
-open( OUT2, ">", $opt_out . "_2.fq" )
-  or die "Can't open file $opt_out" . "_2.fq $!"
-  if ($opt_paired);
+
+if ($opt_paired){
+	if($opt_interleaved){
+		$OUT2 = $OUT1;	
+	}else{
+		open( $OUT2, ">", $opt_out . "_2.fq" )
+		  or die "Can't open file $opt_out" . "_2.fq $!"
+	}
+}
 my $parser = Fastq::Parser->new('file' => $opt_in);
 while ( my $seq = $parser->next_seq() ) {
 	my @fragments = $seq->pb2il(
@@ -146,17 +175,27 @@ while ( my $seq = $parser->next_seq() ) {
 		'length' => $opt_length,
 		'opp-out' => $opt_oppout
 	);
-	foreach my $subseq ( @{ $fragments[0] } ) {
-		print OUT1 $subseq;
-	}
-	if ($opt_paired) {
-		foreach my $subseq ( @{ $fragments[1] } ) {
-			print OUT2 $subseq;
+
+	if($fragments[0] && $opt_interleaved){
+		for(my $i=0; $i<@{$fragments[0]}; $i++){
+			my ($f1, $f2) = ($fragments[0][$i], $fragments[1][$i]);
+			$f1->id($f1->id()."/1");
+			$f2->id($f2->id()."/2");
+			print $OUT1 $f1, $f2;
+		}
+	}else{
+		foreach my $subseq ( @{ $fragments[0] } ) {
+			print $OUT1 $subseq;
+		}
+		if ($opt_paired) {
+			foreach my $subseq ( @{ $fragments[1] } ) {
+				print $OUT2 $subseq;
+			}
 		}
 	}
 }
-close OUT1 or die "$!";
-close OUT2 or die "$!" if ($opt_paired);
+close $OUT1 or die "$!";
+close $OUT2 or die "$!" if ($opt_paired) && ! $opt_interleaved;
 
 =head1 LIMITATIONS
 
