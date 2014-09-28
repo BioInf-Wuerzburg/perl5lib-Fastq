@@ -14,7 +14,7 @@ use lib '../';
 use Verbose;
 
 	
-our $VERSION = '0.12';
+our $VERSION = '0.13';
 our ($REVISION) = '$Revision$' =~ /(\d+)/;
 our ($MODIFIED) = '$Date$' =~ /Date: (\S+\s\S+)/;
 
@@ -309,7 +309,7 @@ sub Complement{
 sub Reverse_complement{
 	my ($class, $seq) = @_;
 	$seq =~ tr/ATGCatgc/TACGtacg/;
-	return reverse $seq;
+	return scalar reverse $seq;
 }
 
 =head2 Add_base_content_scan
