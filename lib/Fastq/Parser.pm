@@ -13,7 +13,7 @@ use lib '../';
 use Fastq::Seq 0.13.0;
 
 
-our $VERSION = '0.10';
+our $VERSION = '0.10.0';
 
 
 
