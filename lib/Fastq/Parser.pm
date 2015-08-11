@@ -10,7 +10,7 @@ use List::Util;
 # preference libs in same folder over @INC
 use lib '../';
 
-use Fastq::Seq 0.10;
+use Fastq::Seq 0.13.0;
 
 
 our $VERSION = '0.10';

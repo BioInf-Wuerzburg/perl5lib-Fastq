@@ -6,14 +6,15 @@ use warnings;
 use strict;
 
 use overload
-	'""' => \&string,
-	'.' => \&cat;
+    'bool' => sub{1},
+    '""' => \&string,
+    '.' => \&cat;
 	
 # preference libs in same folder over @INC
 use lib '../';
 
 	
-our $VERSION = '0.13.2';
+our $VERSION = '0.13.3';
 our ($REVISION) = '$Revision$' =~ /(\d+)/;
 our ($MODIFIED) = '$Date$' =~ /Date: (\S+\s\S+)/;
 
@@ -1271,7 +1272,7 @@ sub string{
     return "$self->{seq_head}\n".
         "$self->{seq}\n".
         "$self->{qual_head}\n".
-        "$self->{qual}\n" unless @_>1;
+        "$self->{qual}\n" unless (@_>1 && defined $_[1]); # overload second argument for "" is undef.
 
     my %p = (line_width => 80, @_[1..$#_]); 
     if ($p{fasta}) {
