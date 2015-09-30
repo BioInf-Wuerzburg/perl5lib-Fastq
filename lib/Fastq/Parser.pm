@@ -13,7 +13,7 @@ use lib '../';
 use Fastq::Seq 0.13.0;
 
 
-our $VERSION = '0.10.1';
+our $VERSION = '1.0.0';
 
 
 
@@ -21,19 +21,19 @@ our $VERSION = '0.10.1';
 
 ##------------------------------------------------------------------------##
 
-=head1 NAME 
+=head1 NAME
 
 Fastq::Parser.pm
 
 =head1 DESCRIPTION
 
-Parser module for FASTQ format data. Reads from files, STDIN or other 
- perl filehandles, can be used to write FASTQ data as well. 
- 
-Most methods work on any kind of input, some methods, like seek will fail 
- on streams and work only on real files. 
- 
-Main feature of the module is to sequentially run through the data and 
+Parser module for FASTQ format data. Reads from files, STDIN or other
+ perl filehandles, can be used to write FASTQ data as well.
+
+Most methods work on any kind of input, some methods, like seek will fail
+ on streams and work only on real files.
+
+Main feature of the module is to sequentially run through the data and
  retrieve Fastq::Seq objects, one at a time for further processing.
 
 =head1 SYNOPSIS
@@ -48,9 +48,9 @@ TODO
 
 =over
 
-=item [BugFix] Descision for ::Gunzip was based on -T evaluation of file. 
+=item [BugFix] Descision for ::Gunzip was based on -T evaluation of file.
  This prevented a file opening in case of writeing, since to file exists at
- all. Now -B is tested and if true ::Gunzip is used, else file is opened 
+ all. Now -B is tested and if true ::Gunzip is used, else file is opened
  with provided mode.
 
 =item [Change] C<< $fp->next_seq(find_record => 1) >> replaces C<< $fp->next_seq(1) >>.
@@ -65,22 +65,22 @@ TODO
 
 =over
 
-=item [BugFix] Changed C<< $fh->tell >> to C<< tell($fh) >>. 
+=item [BugFix] Changed C<< $fh->tell >> to C<< tell($fh) >>.
  C<< IO::Handle->tell >> is only supported in latest module version.
 
 =item [Change] STDIN is not dupped anymore. Dupped STDIN prevents subsequent
  reading of STDIN in main.
 
 =item [Feature] << $fp->check_format >> now reads and B<unreads> the first
- char form input to determine format. Unreading makes it safe to use on 
+ char form input to determine format. Unreading makes it safe to use on
  STDIN without using up stuff from the stream.
 
-=item [Change] Removed << $fp->check_fh_is_pipe >>. Use << $fp->is_fh('PIPE') >> 
+=item [Change] Removed << $fp->check_fh_is_pipe >>. Use << $fp->is_fh('PIPE') >>
 instead.
- 
+
 =item [Feature] << $fp->is_fh() >> allows to tell the type of input stream.
 
-=item [Refactoring] Type of input stream is determined more sophistically. 
+=item [Refactoring] Type of input stream is determined more sophistically.
 
 =item [Change] Uses <&STDIN dup instead of STDIN by default.
 
@@ -94,29 +94,29 @@ instead.
 
 =item [BugFix] Filehandle to pipe can be -p or -t.
 
-=item [Rename] C<< $fp->sample_seq >> to C<< $fp->sample_seqs >> 
+=item [Rename] C<< $fp->sample_seq >> to C<< $fp->sample_seqs >>
 
 =item [BugFix] C<< $fp->sample_seq >> backups and restores buffer.
 
 =item [BugFix] C<< $fp->sample_seq >> did not tell file positiion on correct
  file handle.
 
-=item [Change] C<< $fp->guess_phred_offset >> automatically sets 
+=item [Change] C<< $fp->guess_phred_offset >> automatically sets
  Parsers C<< $fp->{phred_offset} >> attribute.
 
 =item [Change] Preference libs in same folder over @INC
 
 =item [Change] C<< $fp->guess_seq_length >> now returns estimated mean
  READLENGTH, STDDEV. In case a file is provided, reads are randomly sampled,
- not read from the current file position as done with pipes. By default 
+ not read from the current file position as done with pipes. By default
  reads 1000 reads.
 
 =item [Feature] C<< $fp->next_seq >> and C<< $fp->next_raw_seq >> now take
- an optional boolean true which makes the methods search safely for the next 
+ an optional boolean true which makes the methods search safely for the next
  record entry, regardless of any arbitrary position the file handle currently
  might have. Useful after seek stuff.
 
-=item [Feature] C<< $fp->check_fh_is_pipe >> checks whether filehandle is 
+=item [Feature] C<< $fp->check_fh_is_pipe >> checks whether filehandle is
  associated with pipe or file.
 
 =item [BugFix] Splicing reads from buffer had error.
@@ -129,7 +129,7 @@ instead.
 
 =item [Feature] C<< $fp->guess_seq_count >>
 
-=item [Feature] C<< $fp->sample_seqs >> returns randomly drawn seq objects 
+=item [Feature] C<< $fp->sample_seqs >> returns randomly drawn seq objects
  from parsed file.
 
 =item [Change] C<< $fp->check_format >> now stores a complete entry (4 lines)
@@ -191,13 +191,13 @@ Initial Parser module. Provides Constructor and generic accessor
 
 =head2 new
 
-Initialize a Fastq::Parser object. Takes parameters in key => value format. 
+Initialize a Fastq::Parser object. Takes parameters in key => value format.
  Parameters are:
 
   fh => \*STDIN,
   file => undef,
   phred_offset => 64.
-  mode => '<',  # read, 
+  mode => '<',  # read,
         # '+>'    read+write (clobber file first)
         # '+<'    read+write (append)
         # '>'     write (clobber file first)
@@ -207,7 +207,7 @@ Initialize a Fastq::Parser object. Takes parameters in key => value format.
 
 sub new{
 	my $class = shift;
-	
+
 	# defaults=
 	my $self = {
 		fh => undef,
@@ -222,27 +222,26 @@ sub new{
 
 	my $fh;
 	# open file in read/write mode
-	if($self->{file}){
-		if(-B $self->{file}){
-			$fh = IO::Uncompress::Gunzip->new($self->{file});
-		}else{ # assume gzip input
-			open ($fh, $self->{mode}, $self->{file}) or die sprintf("%s: %s, %s",(caller 0)[3],$self->{file}, $!);
-		}
-	}
-
-	if($fh){
-		$self->fh($fh);
-	}else{
-		#open(my $fh, "<&STDIN") or die $!;
-		$self->fh(\*STDIN); # cannot dup, 'cause than ungetc does not work anymore!
-	}
+	if ( $self->{file} ){
+            if(-B $self->{file}){
+                $fh = IO::Uncompress::Gunzip->new($self->{file});
+            }else{
+                open ($fh, $self->{mode}, $self->{file}) or die sprintf("%s: %s, %s",(caller 0)[3],$self->{file}, $!);
+            }
+            $self->fh($fh);
+	} elsif ($self->{fh}) {
+            $self->fh($self->{fh});
+        } else {
+            $self->fh(\*STDIN);
+        }
 
 	return $self;
 }
 
 sub DESTROY{
 	# just to be sure :D
-	my $self = shift;
+    	my $self = shift;
+       	# messy, because "<test.fa" is not -p/t file while /proc/.. is
 	close $self->fh unless $self->is_fh('PIPE');
 }
 
@@ -252,16 +251,16 @@ sub DESTROY{
 
 =head2 next_seq()
 
-Loop through fastq file and return next 'Fastq::Seq' object. Without 
+Loop through fastq file and return next 'Fastq::Seq' object. Without
  parameter, assumes consistent, "four line wise" run through file,
- therefore it will fail if the filehandle is manually set to arbitrary 
+ therefore it will fail if the filehandle is manually set to arbitrary
  position. Returns undef on eof.
 
 To perform a format checks on the seq object see the Fastq::Seq documention,
  C<< Fastq::Seq->CheckFormat() >>.
 
-use << fp->next_seq('find_record => 1') >> to find the actual start of the 
- next valid record before retrieving it. This behaviour is useful in 
+use << fp->next_seq('find_record => 1') >> to find the actual start of the
+ next valid record before retrieving it. This behaviour is useful in
  combination with any previous C<< $fp->seek >> actions.
 
 
@@ -269,7 +268,7 @@ use << fp->next_seq('find_record => 1') >> to find the actual start of the
 
   $fp->seek(-1000,2); # go 1000 bytes back from eof
   $close_to_last_seq = $fp->next_seq(find_record => 1);
-  
+
   Fastq::Seq->CheckFormat(1); # global setting
   $checked_seq = $fp->next_seq();
 
@@ -278,11 +277,11 @@ use << fp->next_seq('find_record => 1') >> to find the actual start of the
 sub next_seq{
 	my $self = shift;
 	my %p = (
-		check_format => 0, 
+		check_format => 0,
 		@_
 	);
-	
-	
+
+
 	if(@{$self->{_buffer}}){
 		# return fastq seq object
 		return Fastq::Seq->new(
@@ -290,7 +289,7 @@ sub next_seq{
 			phred_offset => $self->{phred_offset}
 		);
 	}
-	
+
 	my $fh = $self->{fh};
 	if(
 		defined(my $nh = <$fh>) &&
@@ -298,44 +297,44 @@ sub next_seq{
 		defined(my $qh = <$fh>) &&
 		defined(my $qs = <$fh>)
 	){
-		
+
 		if(exists $p{find_record} && $p{find_record}){
 			# safe record start from any point in file
 			my $lines = 0;
 			until($nh =~ /^@/ && $qh =~ /^\+/){
 				($nh,$ns,$qh,$qs) = ($ns,$qh,$qs, scalar <$fh>);
-				
+
 				# eof
 				unless (defined $qs){
 					# dont know if this makes sense
 					# seek($fh,0,0); # reset to file start
 					return;
 				};
-	
+
 				# corrupt file
-				die	sprintf("%s: %s, line %d, %s",(caller 0)[3],$self->{file}, $fh->input_line_number, 
-					"Couldn't find record start within last 5 lines, possibly corrupted file or wrong format")	
+				die	sprintf("%s: %s, line %d, %s",(caller 0)[3],$self->{file}, $fh->input_line_number,
+					"Couldn't find record start within last 5 lines, possibly corrupted file or wrong format")
 					if $lines > 4;
-				
+
 				$lines++;
 			}
 		}
-		
+
 		# return fastq seq object
 		return Fastq::Seq->new(
 			$nh,$ns,$qh,$qs,
 			phred_offset => $self->{phred_offset},
 		);
 	}
-	
+
 	return;
 }
 
 
 =head2 check_format
 
-Takes a peek at the first entry in the file and checks wether the format of 
- the input looks like FASTQ (leading @). Returns the Parser object on 
+Takes a peek at the first entry in the file and checks wether the format of
+ the input looks like FASTQ (leading @). Returns the Parser object on
  success, undef on failure. Does not modify the input stream, therefore
  can be used on STDIN safely.
 
@@ -348,14 +347,14 @@ NOTE: It only works at the start of the input. This means for pipes, use it
 sub check_format{
 	my ($self) = @_;
 	my $fh = $self->fh;
-	die sprintf("%s: %s",(caller 0)[3],"Format checking only works at the start of the file") 
+	die sprintf("%s: %s",(caller 0)[3],"Format checking only works at the start of the file")
 		if tell($fh);
 	my $c =$fh->getc(); # read first char
         return undef unless $c; # empty file
 
 	# unread first char
-	$self->is_fh('GZIP') 
-		? $fh->ungetc($c)		# IO::Uncompress::Gunzip->ungetc pushes back string 
+	$self->is_fh('GZIP')
+		? $fh->ungetc($c)		# IO::Uncompress::Gunzip->ungetc pushes back string
 		: $fh->ungetc(ord($c)); # IO::File->ungetc pushes back char by ordinal
 
 	return $c eq '@' ? $self : undef;
@@ -365,8 +364,8 @@ sub check_format{
 # DEPRECATED
 #=head2 next_raw_seq
 #
-#Like C<< $fp->next_seq >> but returns next seq as raw string instead of 
-# Fastq::Seq object. Setting the first parameter to TRUE also makes it 
+#Like C<< $fp->next_seq >> but returns next seq as raw string instead of
+# Fastq::Seq object. Setting the first parameter to TRUE also makes it
 # record safe.
 #
 #=cut
@@ -375,19 +374,19 @@ sub next_raw_seq{
 	die "Use of next_raw_seq is deprecated, use something like next->seq->string instead";
 #	my ($self, $safe) = (@_, 0);
 #	my $fh = $self->{fh};
-#	
+#
 #	if(@{$self->{_buffer}}){
 #		# return fastq seq string
 #		return join("",	splice(@{$self->{_buffer}}, 0, 4));
 #	}
-#	
+#
 #	if(
 #		defined(my $nh = <$fh>) &&
 #		defined(my $ns = <$fh>) &&
 #		defined(my $qh = <$fh>) &&
 #		defined(my $qs = <$fh>)
 #	){
-#		
+#
 #		if($safe){
 #			# safe record start
 #			my $lines = 0;
@@ -396,7 +395,7 @@ sub next_raw_seq{
 #				$ns = $qh;
 #				$qh = $qs;
 #				$qs = <$fh>;
-#				
+#
 #				# eof
 #				unless (defined $qs){
 #					seek($fh,0,0); # reset to file start
@@ -405,15 +404,15 @@ sub next_raw_seq{
 #								# corrupt file
 #				die	sprintf("%s: %s, %s",(caller 0)[3],$self->{file}, "Couldn't find record start within next 5 lines, possibly corrupted file or wrong format")
 #					if $lines > 4;
-#				
+#
 #				$lines++;
 #			}
 #		}
-#		
+#
 #		# return fastq seq string
 #		return $nh.$ns.$qh.$qs;
 #	}
-#	
+#
 #	return;
 }
 
@@ -439,7 +438,7 @@ sub seek{
 Append an sequence to the file, provided as object or string. Returns the
  byte offset position in the file.
 
-NOTE: In case a string is provided, make sure it contains trailing newline 
+NOTE: In case a string is provided, make sure it contains trailing newline
  since no further test is performed.
 
 =cut
@@ -466,11 +465,11 @@ sub append_tell{
 =head2 sample_seqs
 
 Sample reads from file. If used on pipe, returns N reads from the current
- position, while keeping them in the buffer for further processing. Takes 
+ position, while keeping them in the buffer for further processing. Takes
  one argument, the number of reads to sample, default 1000. If the file is
- smaller than 10MB, the file is read entirely, else reads from random 
+ smaller than 10MB, the file is read entirely, else reads from random
  positions are read. Returns LIST of Fastq::Seq objects.
- 
+
 NOTE: The set of samples reads is entirely kept in memory, therefore this
  method is not suited to sample large amount of reads from a large file.
 
@@ -481,10 +480,10 @@ sub sample_seqs{
 	my $fh = $self->fh;
 	my $i;
 	my @reads;
-	
+
 	if($self->is_fh('PIPE') or $self->is_fh('GZIP')){
 		#cant seek on pipe: need to buffer and can only read head
-		
+
 		my $l;
 		# read lines from buffer
 		for($i=0; $i<$n && 	$i < (scalar @{$self->{_buffer}}-3)/4; $i++){
@@ -493,10 +492,10 @@ sub sample_seqs{
 				phred_offset => $self->{phred_offset}
 			);
 		}
-		
+
 		# read new lines and add to buffer
 		while(
-			$i < $n && 
+			$i < $n &&
 			defined (my $nh = scalar <$fh>) &&
 			defined (my $ns = scalar <$fh>) &&
 			defined (my $qh = scalar <$fh>) &&
@@ -508,7 +507,7 @@ sub sample_seqs{
 				$nh,$ns,$qh,$qs,
 				phred_offset => $self->{phred_offset}
 			);
-			$i++;		
+			$i++;
 		}
 	}else{
 		my $buffer = $self->{_buffer}; # backup buffer state to restore after sampling
@@ -523,12 +522,12 @@ sub sample_seqs{
 			push @fqs, $fq while $fq = $self->next_seq();
 			my @shuffled_fqs = List::Util::shuffle(@fqs);
 			@reads = @shuffled_fqs > $n
-				? @shuffled_fqs[0..$n] 
-				: @shuffled_fqs; 
+				? @shuffled_fqs[0..$n]
+				: @shuffled_fqs;
 		}else{
 
 			$size -= $size/100; # reduce size by 1% to prevent sampling eof
-	
+
 			for($i=$n;$i;$i--){
 				$self->seek(int(rand($size))); # jump to random pos
 				my $fq = $self->next_seq(find_record => 1); # get next reads with safe start
@@ -536,24 +535,24 @@ sub sample_seqs{
 					push @reads, $fq;
 				}else{	# eof
 					$i++; # do one more iteration
-				}; 
+				};
 			}
 		}
-		
+
 		# restore file handle
 		$self->seek($file_pos);
 		$self->{_buffer} = $buffer; # restore buffer
 	}
-	
+
 	return @reads;
 }
 
 
 =head2 guess_seq_length
 
-Reads up to N reads, randomly sampled if input is file, from the current 
- position if input is pipe, and returns rounded (READLENGTH,STDDEV), or 
- undef on failure or empty file. Provide N as the first parameter, 
+Reads up to N reads, randomly sampled if input is file, from the current
+ position if input is pipe, and returns rounded (READLENGTH,STDDEV), or
+ undef on failure or empty file. Provide N as the first parameter,
  default 1000.
 
 =cut
@@ -562,32 +561,32 @@ sub guess_seq_length{
 	my ($self, $n) = (@_, 1000);
 	my $fh = $self->fh;
 	my $i;
-	
+
 	my @sample_seq = $self->sample_seqs($n);
-	
+
 	return undef unless @sample_seq;
-	
+
 	my $l_total;
 	my @lengths = map{my $l = length($_->seq); $l_total+=$l; $l}@sample_seq;
-	
+
 	# empty file
 	return undef unless $l_total;
-	
+
 	my $mean_l = $l_total/@sample_seq;
 	my $stddev = _stddev(\@lengths, $mean_l);
 	# round mean
-	return (int($mean_l + 0.5), int($stddev + 0.5)); 
+	return (int($mean_l + 0.5), int($stddev + 0.5));
 }
 
 =head2 guess_phred_offset
 
-Samples up to N reads from current data and checks the boundaries of the 
+Samples up to N reads from current data and checks the boundaries of the
  quality range. Returns 33 for range (33,33+42), 64 for range (64,64+42)
- or undef in any other case. Provide N as the first 
+ or undef in any other case. Provide N as the first
  parameter, default 1000.
- 
- NOTE: There is an intersection for both ranges (64 to 75). If all sampled 
- values lie within this intersection range the method will return undef, 
+
+ NOTE: There is an intersection for both ranges (64 to 75). If all sampled
+ values lie within this intersection range the method will return undef,
  since the offset cannot be determined with certainty.
 
 =cut
@@ -596,49 +595,49 @@ sub guess_phred_offset{
 	my ($self, $n) = (@_, 1000);
 	my $fh = $self->fh;
 	my $i;
-	
+
 	my @sample_seq = $self->sample_seqs($n);
-	
+
 	return undef unless @sample_seq;
-	
+
 	my @quals;
 	foreach my $fq(@sample_seq){
 		push @quals, split(//, $fq->qual);
 	}
-	
+
 	@quals = sort @quals;
-	
+
 	my $min = $quals[0];
 	my $max = $quals[-1];
-	
+
 	# intersection => undetermined
 	if( ord($min) >= 64 && ord($max) <= 33+42){
 		$self->{phred_offset} = undef;
-		return undef 
-	
+		return undef
+
 	# 33
 	}elsif( ord($min) >= 33 && ord($max) <= 33+42 ){
 		$self->phred_offset(33);
-		return 33 
-	
+		return 33
+
 	# 64
 	}elsif(	ord($min) >= 64 && ord($max) <= 64+42 ){
 		$self->phred_offset(64);
-		return 64 
-	
+		return 64
+
 	# unknown
 	}else{
 		$self->{phred_offset} = undef;
 		return undef;
 	}
-	
+
 }
 
 =head2 guess_seq_count
 
 Reads up to n reads from the current position of the FASTQ and estimates the
- mean size in bytes per FASTQ entry. Extrapolates the read number to match 
- the file size and returns the thus approximated total number of reads. 
+ mean size in bytes per FASTQ entry. Extrapolates the read number to match
+ the file size and returns the thus approximated total number of reads.
  Returns undef on STDIN.
 
 =cut
@@ -652,10 +651,10 @@ sub guess_seq_count{
 	my $file_size = $self->file_size();
 	# empty file
 	return 0 unless $file_size;
-	
+
 	my @sample_seqs = $self->sample_seqs($n);
 	return undef unless @sample_seqs;
-	
+
 	$size+= length($_->string) for @sample_seqs;
 	#print $median_size;
 	return int(($file_size/$size* @sample_seqs)+0.5);
@@ -663,7 +662,7 @@ sub guess_seq_count{
 
 =head2 is_fh
 
-Determine the type of the filehandle. Without parameter, returns 0 for 
+Determine the type of the filehandle. Without parameter, returns 0 for
  handle to FILE, 1 for PIPE, and 2 for a handle to a SCALAR.
 Alternatively you can provide the name of the type or the corresponding
  INT as single parameter. In these cases, the methods returns 1, if the
@@ -677,7 +676,7 @@ Alternatively you can provide the name of the type or the corresponding
 
 sub is_fh{
 	my ($self, $type) = @_;
-	
+
 	my %type = (
 		'FILE' => 0,
 		'PIPE' => 1,
@@ -688,11 +687,11 @@ sub is_fh{
 		2 => 2,
 		3 => 3,
 	);
-	
+
 	if(defined $type){
-		die sprintf("%s: %s",(caller 0)[3],"unknown type $type") 
+		die sprintf("%s: %s",(caller 0)[3],"unknown type $type")
 			unless exists $type{$type};
-		
+
 		return $type{$type} == $self->{_is_fh} ? 1 : 0;
 	}
 
@@ -711,7 +710,7 @@ sub _stddev{
 	my($values, $mean1) = (@_);
 	#Prevent division by 0 error in case you get junk data
 	return undef unless scalar @$values;
-	
+
 	# calculate mean unless given
 	unless(defined $mean1){
 		# Step 1, find the mean of the numbers
@@ -719,14 +718,14 @@ sub _stddev{
 		$total1 += $_  for @$values;
 		my $mean1 = $total1 / (scalar @$values);
 	}
-	
-	
+
+
 	# find the mean of the squares of the differences
 	# between each number and the mean
 	my $total2 = 0;
 	$total2 += ($mean1-$_)**2 for @$values;
 	my $mean2 = $total2 / (scalar @$values);
-	
+
 	# standard deviation is the square root of the
 	# above mean
 	return sqrt($mean2);
@@ -746,28 +745,27 @@ Get/Set the file handle.
 
 sub fh{
 	my ($self, $fh) = @_;
-	
+
 	if($fh){
-		if((ref $fh) =~ m/Gunzip/){
-			$self->{_is_fh} = 3;
-		}elsif(-f $fh){
-			$self->{_is_fh} = 0;
-		}elsif(-p $fh or  -t $fh){
-			$self->{_is_fh} = 1;
-		}elsif(ref $fh eq 'SCALAR'){
-			$self->{_is_fh} = 2;
-		}else{
-			die sprintf("%s: %s",(caller 0)[3],"Unknown filehandle type");
-		}
-		$self->{fh} = $fh;
+            if((ref $fh) =~ m/Gunzip/){
+                $self->{_is_fh} = 3;
+            }elsif(-p $fh or  -t $fh){
+                $self->{_is_fh} = 1;
+            }elsif(-f $fh){
+                $self->{_is_fh} = 0;
+            }elsif(ref $fh eq 'SCALAR'){
+                $self->{_is_fh} = 2;
+            }else{
+                die sprintf("%s: %s",(caller 0)[3],"Unknown filehandle type");
+            }
+            $self->{fh} = $fh;
 	}
-	
+
 	return $self->{fh};
 }
 
 
 =head2 phred_offset
-
 Get/Set phred quality offset. Default 64.
 
 =cut
@@ -807,6 +805,3 @@ Thomas Hackl S<thomas.hackl@uni-wuerzburg.de>
 
 
 1;
-
-
-
