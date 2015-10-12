@@ -14,7 +14,7 @@ use overload
 use lib '../';
 
 	
-our $VERSION = '0.13.3';
+our $VERSION = '0.13.4';
 our ($REVISION) = '$Revision$' =~ /(\d+)/;
 our ($MODIFIED) = '$Date$' =~ /Date: (\S+\s\S+)/;
 
@@ -1063,7 +1063,6 @@ sub qual_window{
 
 sub qual_window{
 	my ($self, $sorted_by_length) = (@_);
-	use Data::Dumper;
 	
 	$_Qual_window_window_min_score_soft = $Qual_window_min_score_soft * $Qual_window_size;
 	@_qw_X = $self->phreds;
@@ -1268,11 +1267,11 @@ Get entire sequence as FASTQ string. Return FASTA by setting fasta =>
 =cut
 
 sub string{
-    my ($self) = @_;
+    my ($self, $x) = @_; # capture first opt, if undef -> short cut
     return "$self->{seq_head}\n".
         "$self->{seq}\n".
         "$self->{qual_head}\n".
-        "$self->{qual}\n" unless (@_>1 && defined $_[1]); # overload second argument for "" is undef.
+        "$self->{qual}\n" if (!defined $x); # overload second argument for "" is undef.
 
     my %p = (line_width => 80, @_[1..$#_]); 
     if ($p{fasta}) {
