@@ -13,10 +13,7 @@ use lib '../';
 use Fastq::Seq 0.13.0;
 
 
-our $VERSION = '1.0.0';
-
-
-
+our $VERSION = '1.0.1';
 
 
 ##------------------------------------------------------------------------##
@@ -37,155 +34,6 @@ Main feature of the module is to sequentially run through the data and
  retrieve Fastq::Seq objects, one at a time for further processing.
 
 =head1 SYNOPSIS
-
-TODO
-
-=cut
-
-=head1 CHANGELOG
-
-=head2 0.09
-
-=over
-
-=item [BugFix] Descision for ::Gunzip was based on -T evaluation of file.
- This prevented a file opening in case of writeing, since to file exists at
- all. Now -B is tested and if true ::Gunzip is used, else file is opened
- with provided mode.
-
-=item [Change] C<< $fp->next_seq(find_record => 1) >> replaces C<< $fp->next_seq(1) >>.
- Adjusted C<< $fp->sample_seq() >>.
-
-=item [Change] Removed C<< $fp->next_raw_seq >>. Use C<< $fp->next_seq->string >>
- instead.
-
-=back
-
-=head2 0.08
-
-=over
-
-=item [BugFix] Changed C<< $fh->tell >> to C<< tell($fh) >>.
- C<< IO::Handle->tell >> is only supported in latest module version.
-
-=item [Change] STDIN is not dupped anymore. Dupped STDIN prevents subsequent
- reading of STDIN in main.
-
-=item [Feature] << $fp->check_format >> now reads and B<unreads> the first
- char form input to determine format. Unreading makes it safe to use on
- STDIN without using up stuff from the stream.
-
-=item [Change] Removed << $fp->check_fh_is_pipe >>. Use << $fp->is_fh('PIPE') >>
-instead.
-
-=item [Feature] << $fp->is_fh() >> allows to tell the type of input stream.
-
-=item [Refactoring] Type of input stream is determined more sophistically.
-
-=item [Change] Uses <&STDIN dup instead of STDIN by default.
-
-=back
-
-=cut
-
-=head2 0.07
-
-=over
-
-=item [BugFix] Filehandle to pipe can be -p or -t.
-
-=item [Rename] C<< $fp->sample_seq >> to C<< $fp->sample_seqs >>
-
-=item [BugFix] C<< $fp->sample_seq >> backups and restores buffer.
-
-=item [BugFix] C<< $fp->sample_seq >> did not tell file positiion on correct
- file handle.
-
-=item [Change] C<< $fp->guess_phred_offset >> automatically sets
- Parsers C<< $fp->{phred_offset} >> attribute.
-
-=item [Change] Preference libs in same folder over @INC
-
-=item [Change] C<< $fp->guess_seq_length >> now returns estimated mean
- READLENGTH, STDDEV. In case a file is provided, reads are randomly sampled,
- not read from the current file position as done with pipes. By default
- reads 1000 reads.
-
-=item [Feature] C<< $fp->next_seq >> and C<< $fp->next_raw_seq >> now take
- an optional boolean true which makes the methods search safely for the next
- record entry, regardless of any arbitrary position the file handle currently
- might have. Useful after seek stuff.
-
-=item [Feature] C<< $fp->check_fh_is_pipe >> checks whether filehandle is
- associated with pipe or file.
-
-=item [BugFix] Splicing reads from buffer had error.
-
-=item [Change] Added auto Id, Date and Revision on svn checkin
-
-=item [Feature] C<< $fp->guess_phred_offset >>
-
-=item [Feature] C<< $fp->guess_seq_length >>
-
-=item [Feature] C<< $fp->guess_seq_count >>
-
-=item [Feature] C<< $fp->sample_seqs >> returns randomly drawn seq objects
- from parsed file.
-
-=item [Change] C<< $fp->check_format >> now stores a complete entry (4 lines)
-
-=back
-
-=head2 0.06
-
-[Bugfix] C<< $fp->seek >> now clears _buffer.
-
-=head2 0.05
-
-Added FASTQ write support, including byte offset indexing.
-
-=head2 0.04
-
-Added C<< $fp->check_format >>. Determines whether input looks like FASTQ.
-
-=head2 0.03
-
-Modified to use Fastq:Seq 0.03+
-
-=head2 0.02
-
-Added C<next_raw_seq()>.
-
-=head2 0.01
-
-Initial Parser module. Provides Constructor and generic accessor
- methods
-
-
-=cut
-
-=head1 TODO
-
-=over
-
-=item Synopsis
-
-=item Tests
-
-=item empty file currently throws "NOT FASTA" exception
-
-=back
-
-=cut
-
-##------------------------------------------------------------------------##
-
-=head1 Class METHODS
-
-=cut
-
-
-##------------------------------------------------------------------------##
 
 =head1 Constructor METHOD
 
@@ -215,6 +63,7 @@ sub new{
 		phred_offset => undef,
 		mode => '<',
 		_buffer => [],
+                _close_fh => 0,
 		@_	# overwrite defaults
 	};
 
@@ -222,11 +71,12 @@ sub new{
 
 	my $fh;
 	# open file in read/write mode
-	if ( $self->{file} ){
+	if ( $self->{file} && $self->{file} ne '-'){
             if(-B $self->{file}){
                 $fh = IO::Uncompress::Gunzip->new($self->{file});
             }else{
                 open ($fh, $self->{mode}, $self->{file}) or die sprintf("%s: %s, %s",(caller 0)[3],$self->{file}, $!);
+                $self->{_close_fh} = 1;
             }
             $self->fh($fh);
 	} elsif ($self->{fh}) {
@@ -242,7 +92,8 @@ sub DESTROY{
 	# just to be sure :D
     	my $self = shift;
        	# messy, because "<test.fa" is not -p/t file while /proc/.. is
-	close $self->fh unless $self->is_fh('PIPE');
+        # only close files opened with Parser
+	close $self->fh if $self->{_close_fh};
 }
 
 =head1 Object METHODS
