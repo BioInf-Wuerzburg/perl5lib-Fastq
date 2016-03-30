@@ -3,6 +3,8 @@ use strict;
 use warnings;
 use Getopt::Long;
 use Pod::Usage;
+
+use lib '../lib';
 use Fastq::Seq;
 use Fastq::Parser;
 use Fastq::Seq::Pb2Il;
@@ -11,25 +13,22 @@ my %options;
 
 =head1 NAME 
 
-Pb2Il.pl
+Pb2Il
+
+=head1 AUTHORS
+
+Markus Ankenbrand - S<markus.ankenbrand@uni-wuerzburg.de>
+
+Thomas Hackl - S<thackl@lim4.de>
 
 =head1 DESCRIPTION
 
-This script creates (paired) read files from a file with larger sequences (eg Illumina reads from PacBio reads).
-
-=head1 CHANGELOG
-
-=over
-
-=item [Feature] --in reads STDIN by default.
-
-=item [Feature] --interleaved creates interleaved output (thackl)
-
-=back
+Create (paired) read files from a file with larger sequences (e.g. Illumina
+reads from PacBio reads).
 
 =head1 USAGE
 
-  $ perl Pb2Il.pl --in=<file> --out <filebase> [options]
+  $ Pb2Il --in=<file> --out <filebase> [options]
 
 =head1 OPTIONS
 
@@ -41,7 +40,7 @@ path to the fastq file containing the large reads. Default STDIN.
 
 =cut
 
-$options{'in=s'} = \( my $opt_in );
+$options{'i|in=s'} = \( my $opt_in );
 
 =item --out=<FILEBASE>
 
@@ -49,7 +48,7 @@ path to the desired output files _1.fq and _2.fq is automatically appended to FI
 
 =cut
 
-$options{'out=s'} = \( my $opt_out );
+$options{'o|out=s'} = \( my $opt_out );
 
 =item --[no]paired
 
@@ -176,11 +175,14 @@ while ( my $seq = $parser->next_seq() ) {
 		'opp-out' => $opt_oppout
 	);
 
-	if($fragments[0] && $opt_interleaved){
+        if ($opt_paired) {
+            map{$_->id($_->id()."/1")}@{$fragments[0]};
+            map{$_->id($_->id()."/2")}@{$fragments[1]};
+        }
+
+        if($fragments[0] && $opt_interleaved){
 		for(my $i=0; $i<@{$fragments[0]}; $i++){
 			my ($f1, $f2) = ($fragments[0][$i], $fragments[1][$i]);
-			$f1->id($f1->id()."/1");
-			$f2->id($f2->id()."/2");
 			print $OUT1 $f1, $f2;
 		}
 	}else{
@@ -196,17 +198,5 @@ while ( my $seq = $parser->next_seq() ) {
 }
 close $OUT1 or die "$!";
 close $OUT2 or die "$!" if ($opt_paired) && ! $opt_interleaved;
-
-=head1 LIMITATIONS
-
-This parser uses a static naming scheme, DIOMUGxxx and DIOMUTxxx intended for D. muscipula.
-
-=head1 AUTHORS
-
-=over
-
-=item * Markus Ankenbrand, markus.ankenbrand@stud-mail.uni-wuerzburg.de
-
-=back
 
 
