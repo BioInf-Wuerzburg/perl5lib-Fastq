@@ -4,7 +4,9 @@ use warnings;
 use Getopt::Long;
 use Pod::Usage;
 
-use lib '../lib';
+use FindBin;
+use lib $FindBin::RealBin.'/../lib';
+
 use Fastq::Seq;
 use Fastq::Parser;
 use Fastq::Seq::Pb2Il;
