@@ -11,8 +11,8 @@ use overload
 	
 # preference libs in same folder over @INC
 use lib '../';
-use Verbose;
-
+#use Verbose;
+use Log::Log4perl;
 	
 our $VERSION = '0.13';
 our ($REVISION) = '$Revision$' =~ /(\d+)/;
@@ -222,7 +222,9 @@ Verbose messages are handled using the Verbose.pm module. To
 
 =cut
 
-our $V = Verbose->new();
+#our $V = Verbose->new();
+
+my $L = Log::Log4perl::get_logger();
 
 our $Base_content_scans = {
 	'N' => sub{	return $_[0] =~ tr/'N'// },
@@ -372,7 +374,7 @@ sub Qual_lcs_range{
 		$Qual_lcs_range =~ s/([\\\^\-\[\]])/\\$1/g;
 		$Qual_lcs_regex = qr/([$Qual_lcs_range]{$Qual_lcs_min_length,})/o;	
 	}elsif(@_){
-		die sprintf("%s: %s",(caller 0)[3], "wrong number of parameter (1 or 3)");
+		$L->logdie( sprintf("%s: %s",(caller 0)[3], "wrong number of parameter (1 or 3)"));
 	}
 	return $Qual_lcs_range;
 }
@@ -391,7 +393,7 @@ sub Qual_low_range{
 		$Qual_low_range =~ s/([\\\^\-\[\]])/\\$1/g;
 		$Qual_low_regex = qr/([$Qual_low_range]+)/o;	
 	}elsif(@_){
-		die sprintf("%s: %s",(caller 0)[3], "wrong number of parameter (1 or 3)");
+		$L->logdie(sprintf("%s: %s",(caller 0)[3], "wrong number of parameter (1 or 3)"));
 	}
 	return $Qual_low_range;
 }
@@ -582,9 +584,9 @@ sub new{
 		if(@_%2){ # create object from string
 			my %self;
 			my $fq = shift;
-			die __PACKAGE__."::new: STRING undefined" unless defined $fq;
+			$L->logdie( __PACKAGE__."::new: STRING undefined") unless defined $fq;
 			my @fq = split(/\n/, $fq);
-			die __PACKAGE__."::new: STRING does not contain 4 lines at:\nx".("-"x78)."x\n$fq" unless @fq == 4;
+			$L->logdie( __PACKAGE__."::new: STRING does not contain 4 lines at:\nx".("-"x78)."x\n$fq") unless @fq == 4;
 			@self{'seq_head','seq','qual_head','qual'} = @fq;
 			$self = {
 				%self,
@@ -592,7 +594,7 @@ sub new{
 				@_	# overwrite defaults
 			};
 		}else{ # create object from array
-			die __PACKAGE__."::new: ARRAY must contain at least 4 lines" unless @_ > 3; # require at least 4 lines
+			$L->logdie( __PACKAGE__."::new: ARRAY must contain at least 4 lines") unless @_ > 3; # require at least 4 lines
 			$self = {
 				seq_head => $_[0],
 				seq => $_[1],
@@ -635,20 +637,20 @@ Checks format of Fastq::Seq object. seq_head needs to start with "@", qual_head
 sub check_format{
 	my $self = shift;
 	# @
-	die __PACKAGE__."::check_format: seq_head does not start with '\@' at:\n#".("-"x78)."#\n"."$self" 
+	$L->logdie( __PACKAGE__."::check_format: seq_head does not start with '\@' at:\n#".("-"x78)."#\n"."$self") 
 		unless $self->{seq_head} =~ /^@/;
 	# +
-	die __PACKAGE__."::check_format: qual_head does not start with '+' at:\n#".("-"x78)."#\n"."$self" 
+	$L->logdie( __PACKAGE__."::check_format: qual_head does not start with '+' at:\n#".("-"x78)."#\n"."$self") 
 		unless $self->{qual_head} =~ /^\+/;
 	# length
-	die __PACKAGE__."::check_format: seq and qual differ in length at:\n#".("-"x78)."#\n"."$self"
+	$L->logdie( __PACKAGE__."::check_format: seq and qual differ in length at:\n#".("-"x78)."#\n"."$self")
 		unless length($self->seq) == length($self->qual);
 	
 	# phred offset
 	if(defined $self->phred_offset()){
 		my @phreds = $self->phreds();
 		if(my @out_of_b = grep{$_ < 0 ||  $_ > 40}@phreds){
-			die __PACKAGE__."::check_format: Detected phreds (".join(",",@out_of_b).") out of boundaries (0-40)\n"."$self"
+		    $L->logdie( __PACKAGE__."::check_format: Detected phreds (".join(",",@out_of_b).") out of boundaries (0-40)\n"."$self");
 		}
 	}
 	return $self;
@@ -827,13 +829,13 @@ sub substr_seq{
 		
 		my ($o, $l, $r, $q) = ref $_[0] ? @{$_[0]} : @_;
 					
-		die __PACKAGE__."::substr_seq: Not enougth arguments\n" 
+		$L->logdie( __PACKAGE__."::substr_seq: Not enougth arguments\n") 
 			unless defined ($o);
 			
 		
 		# replace
 		if(defined $r){
-			die __PACKAGE__."::substr_seq: seq and qual replacement need to be of same length \n$r\n$q\n" 
+			$L->logdie( __PACKAGE__."::substr_seq: seq and qual replacement need to be of same length \n$r\n$q\n") 
 				unless defined ($q) && length ($r) eq length ($q);
 			$fq->desc_append(sprintf("SUBSTR:%d,%d", $o, $l));
 			substr($fq->{seq}, $o, $l, $r);
@@ -860,12 +862,12 @@ sub substr_seq{
 	
 			my ($o, $l, $r, $q) = @$_;
 			
-			die __PACKAGE__."::substr_seq: Not enougth arguments\n" 
+			$L->logdie( __PACKAGE__."::substr_seq: Not enougth arguments\n") 
 				unless defined ($o);
 			
 			# replace
 			if(defined $r){
-				die __PACKAGE__."::substr_seq: seq and qual replacement need to be of same length \n$r\n$q\n" 
+				$L->logdie( __PACKAGE__."::substr_seq: seq and qual replacement need to be of same length \n$r\n$q\n") 
 					unless defined ($q) && length ($r) eq length ($q);
 				$fq->desc_append(sprintf("SUBSTR:%d,%d", $o, $l));
 				substr($fq->{seq}, $o, $l, $r);
@@ -915,7 +917,7 @@ sub phred_transform{
 	my ($self) = @_;
 	my $po = $self->{phred_offset};
 	unless (defined $po && ($po == 33 || $po == 64)){
-		die "Unknown or unsupported phred offset, cannot transform" 
+		$L->logdie( "Unknown or unsupported phred offset, cannot transform"); 
 	}
 	$po = $po == 33 ? 64 : 33; # switch po 
 	&{$Tr{$po}}($self->{qual});
