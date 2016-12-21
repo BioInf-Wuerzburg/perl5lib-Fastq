@@ -12,7 +12,7 @@ use overload
 # preference libs in same folder over @INC
 use lib '../';
 #use Verbose;
-use Log::Log4perl;
+use Log::Log4perl qw(:easy);
 	
 our $VERSION = '0.13';
 our ($REVISION) = '$Revision$' =~ /(\d+)/;
